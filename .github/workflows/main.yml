@@ -40,9 +40,8 @@ jobs:
           # Run Cygwin setup in unattended mode, installing necessary packages
           C:\temp\setup-x86_64.exe -q -P git,p7zip,python3,wget,xz,zip,unzip,dos2unix
 
-          # Add Cygwin bin directory to PATH for subsequent steps
-          $env:PATH = "C:\cygwin64\bin;" + $env:PATH
-          Write-Host "::add-path::C:\cygwin64\bin" # GitHub Actions way to add to path
+          # Add Cygwin bin directory to PATH using Environment File
+          Add-Content -Path "${env:GITHUB_PATH}" -Value "C:\cygwin64\bin"
 
 
       - name: Configure Cygwin for symlinks
