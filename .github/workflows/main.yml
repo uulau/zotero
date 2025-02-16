@@ -19,7 +19,7 @@ jobs:
                 p7zip
                 python3
                 wget
-                xz
+                xz-utils
                 zip
                 unzip
           
