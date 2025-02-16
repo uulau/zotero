@@ -70,6 +70,13 @@ def main():
         os.mkdir(tmp_dir)
         
         tmp_src_dir = os.path.join(tmp_dir, 'zotero')
+
+        log(app_root_dir)
+        log(src_dir)
+        log(output_dir)
+        log(tmp_dir)
+        log(tmp_src_dir)
+        log(os.path.relpath(tmp_src_dir, src_dir))
         
         # Export a clean copy of the source tree
         subprocess.check_call([
