@@ -11,6 +11,18 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      - uses: Vampire/setup-wsl@v4
+        with:
+            additional-packages:
+                dos2unix
+                git
+                p7zip
+                python3
+                wget
+                xz
+                zip
+                unzip
+          
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -26,7 +38,7 @@ jobs:
           node-version: 18
 
       - name: Clone Zotero source and prepare
-        shell: C:\Windows\System32\bash.exe {0}
+        shell: wsl-bash {0}
         run: |
           git clone --config core.symlinks=true --no-checkout https://github.com/uulau/zotero zotero-client
           cd zotero-client
@@ -36,21 +48,21 @@ jobs:
           git submodule update --init --recursive
           
       - name: Fetch rcedit
-        shell: C:\Windows\System32\bash.exe {0}
+        shell: wsl-bash {0}
         run: cd zotero-client && app/scripts/fetch_rcedit
 
       - name: Build Zotero for Windows
-        shell: C:\Windows\System32\bash.exe {0}
+        shell: wsl-bash {0}
         run: |
           cd zotero-client
           npm install -g win-node-env
           npm run build
           app/scripts/dir_build -p w
         env:
-          NODE_OPTIONS: --openssl-legacy-provider # For potential OpenSSL issues
+          NODE_OPTIONS: --openssl-legacy-provider
 
       - name: Zip the built app
-        shell: C:\Windows\System32\bash.exe {0}
+        shell: wsl-bash {0}
         run: |
           cd zotero-client/app/staging
           appName="Zotero_win-x64" # Adjust if your build output directory name is different
