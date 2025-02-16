@@ -11,19 +11,6 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: Vampire/setup-wsl@v4
-        with:
-            additional-packages:
-                dos2unix
-                git
-                p7zip
-                python3
-                wget
-                xz-utils
-                zip
-                unzip
-                curl
-          
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -38,10 +25,18 @@ jobs:
         with:
           node-version: 18
 
+      - name: Install Cygwin
+        uses: cygwin/cygwin-install-action@master
+        with:
+          packages: git,p7zip,python3,wget,xz,zip,unzip,dos2unix
+
+      - name: Configure Cygwin for symlinks
+        shell: bash
+        run: export CYGWIN="winsymlinks:nativestrict"
+
       - name: Clone Zotero source and prepare
-        shell: wsl-bash {0}
+        shell: bash
         run: |
-          git config --global http.sslverify false
           git clone --config core.symlinks=true --no-checkout https://github.com/uulau/zotero zotero-client
           cd zotero-client
           git checkout HEAD package.json package-lock.json
@@ -50,23 +45,21 @@ jobs:
           git submodule update --init --recursive
           
       - name: Fetch rcedit
-        shell: wsl-bash {0}
-        run: |
-          echo insecure >> ~/.curlrc
-          cd zotero-client && app/scripts/fetch_rcedit
+        shell: bash
+        run: cd zotero-client && app/scripts/fetch_rcedit
 
       - name: Build Zotero for Windows
-        shell: wsl-bash {0}
+        shell: bash
         run: |
           cd zotero-client
           npm install -g win-node-env
           npm run build
           app/scripts/dir_build -p w
         env:
-          NODE_OPTIONS: --openssl-legacy-provider
+          NODE_OPTIONS: --openssl-legacy-provider # For potential OpenSSL issues
 
       - name: Zip the built app
-        shell: wsl-bash {0}
+        shell: bash
         run: |
           cd zotero-client/app/staging
           appName="Zotero_win-x64" # Adjust if your build output directory name is different
