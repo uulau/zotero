@@ -1,0 +1,93 @@
+name: Build and Release Windows
+
+on:
+  push:
+    branches:
+      - main # Or your main branch name
+
+jobs:
+  build-windows:
+    name: Build Windows App and Create Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          lfs: true
+
+      - name: Set Git autocrlf to false
+        run: git config --global core.autocrlf false
+
+      - name: Install Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Cygwin and required packages
+        shell: bash # Use bash shell for cygwin setup commands
+        run: |
+          # Download Cygwin setup-x86_64.exe
+          wget https://cygwin.com/setup-x86_64.exe -P /tmp
+
+          # Run Cygwin setup in unattended mode, installing necessary packages
+          /tmp/setup-x86_64.exe -q -P git,p7zip,python3,wget,xz,zip,unzip,dos2unix
+
+          # Add Cygwin bin directory to PATH for subsequent steps
+          echo "C:\cygwin64\bin" >> $GITHUB_PATH
+
+      - name: Configure Cygwin for symlinks
+        shell: bash
+        run: export CYGWIN="winsymlinks:nativestrict"
+
+      - name: Clone Zotero source and prepare
+        shell: bash
+        run: |
+          git clone --config core.symlinks=true --no-checkout https://github.com/uulau/zotero zotero-client
+          cd zotero-client
+          git checkout HEAD package.json package-lock.json
+          npm install
+          git checkout -f HEAD
+          git submodule update --init --recursive
+
+      - name: Fetch rcedit
+        shell: bash
+        run: cd zotero-client && app/scripts/fetch_rcedit
+
+      - name: Build Zotero for Windows
+        shell: bash
+        run: cd zotero-client && app/scripts/dir_build -p w
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider # For potential OpenSSL issues
+
+      - name: Zip the built app
+        shell: bash
+        run: |
+          cd zotero-client/app/staging
+          $appName="Zotero_win-x64" # Adjust if your build output directory name is different
+          Compress-Archive -Path "$appName" -DestinationPath "../../../zotero-win-build.zip" -CompressionLevel Optimal
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        if: github.ref == 'refs/heads/main' # Optional: Only release on pushes to main
+        with:
+          tag_name: v${{ github.run_number }} # Example: v1, v2, v3... based on workflow run number. Customize as needed.
+          release_name: Zotero Windows Build v${{ github.run_number }}
+          body: |
+            Automated Windows build of Zotero.
+
+            **Note:** This is an unpackaged build and may require manual setup.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        if: github.ref == 'refs/heads/main' # Optional: Only release on pushes to main
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: zotero-client/zotero-win-build.zip
+          asset_name: zotero-win-build-v${{ github.run_number }}.zip
+          asset_content_type: application/zip
