@@ -642,30 +642,35 @@ Zotero.Sync.Storage.Mode.WebDAV.prototype = {
 			}
 		}
 		
-		// Test whether URL is WebDAV-enabled
-		var req = yield Zotero.HTTP.request(
-			"OPTIONS",
-			uri,
-			{
-				successCodes: [200, 204, 404],
-				requestObserver: function (req) {
-					if (req.channel) {
-						channel = req.channel;
-					}
-					if (options.onRequest) {
-						options.onRequest(req);
-					}
-				},
-				errorDelayMax: 0,
-				debug: true
+		if (uri.host != "d.docs.live.net") {
+			// Test whether URL is WebDAV-enabled
+			var req = yield Zotero.HTTP.request(
+				"OPTIONS",
+				uri,
+				{
+					successCodes: [200, 204, 404],
+					requestObserver: function (req) {
+						if (req.channel) {
+							channel = req.channel;
+						}
+						if (options.onRequest) {
+							options.onRequest(req);
+						}
+					},
+					errorDelayMax: 0,
+					debug: true
+				}
+			);
+
+			Zotero.debug(req.getAllResponseHeaders());
+		
+			var dav = req.getResponseHeader("DAV");
+			if (dav == null) {
+				throw new this.VerificationError("NOT_DAV", Zotero.HTTP.getDisplayURI(uri, true).spec);
 			}
-		);
-		
-		Zotero.debug(req.getAllResponseHeaders());
-		
-		var dav = req.getResponseHeader("DAV");
-		if (dav == null) {
-			throw new this.VerificationError("NOT_DAV", Zotero.HTTP.getDisplayURI(uri, true).spec);
+		}
+		else {
+			Zotero.debug(`${uri.host} is a OneDrive host, skipping WebDAV check.`);
 		}
 		
 		var headers = { Depth: 0 };
