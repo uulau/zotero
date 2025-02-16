@@ -65,6 +65,7 @@ jobs:
         shell: bash
         run: |
           cd zotero-client
+          npm install -g win-node-env
           npm run build
           app/scripts/dir_build -p w
         env:
