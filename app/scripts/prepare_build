@@ -111,15 +111,12 @@ def main():
             raise FileNotFoundError(d + " not found")
         
         # Delete CSL locale support files
-        subprocess.check_call([
-            'find',
-            os.path.normpath(tmp_src_dir + '/chrome/content/zotero/locale/csl/'),
-            '-mindepth', '1',
-            '!', '-name', '*.xml',
-            '!', '-name', 'locales.json',
-            #'-print',
-            '-delete'
-        ])
+        locale_dir = Path(tmp_src_dir) / "chrome/content/zotero/locale/csl"
+        
+        # Delete all files except those ending in .xml or named locales.json
+        for file in locale_dir.iterdir():
+            if file.is_file() and not (file.suffix == ".xml" or file.name == "locales.json"):
+                file.unlink()
         
         # Delete styles build script
         os.remove(os.path.join(tmp_src_dir, 'styles', 'update'))
