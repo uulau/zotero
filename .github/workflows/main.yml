@@ -29,11 +29,16 @@ jobs:
       - name: Install Cygwin and required packages
         shell: pwsh # Use PowerShell for this step
         run: |
-          # Download Cygwin setup-x86_64.exe using PowerShell
-          Invoke-WebRequest -Uri https://cygwin.com/setup-x86_64.exe -OutFile /tmp/setup-x86_64.exe
+          # Ensure C:\temp directory exists
+          if (!(Test-Path -Path "C:\temp" -PathType Container)) {
+              New-Item -ItemType Directory -Path "C:\temp"
+          }
+
+          # Download Cygwin setup-x86_64.exe using PowerShell to a valid Windows path
+          Invoke-WebRequest -Uri https://cygwin.com/setup-x86_64.exe -OutFile "C:\temp\setup-x86_64.exe"
 
           # Run Cygwin setup in unattended mode, installing necessary packages
-          /tmp/setup-x86_64.exe -q -P git,p7zip,python3,wget,xz,zip,unzip,dos2unix
+          C:\temp\setup-x86_64.exe -q -P git,p7zip,python3,wget,xz,zip,unzip,dos2unix
 
           # Add Cygwin bin directory to PATH for subsequent steps
           $env:PATH = "C:\cygwin64\bin;" + $env:PATH
