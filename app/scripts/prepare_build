@@ -77,7 +77,9 @@ def main():
         log(tmp_dir)
         log(tmp_src_dir)
         log(os.path.relpath(tmp_src_dir, src_dir))
-        
+
+        from pathlib import Path
+
         # Export a clean copy of the source tree
         subprocess.check_call([
             'rsync',
@@ -87,8 +89,8 @@ def main():
             '--exclude', '#*',
             '--exclude', 'package.json',
             '--exclude', 'package-lock.json',
-            '.' + os.sep,
-            os.path.relpath(tmp_src_dir, src_dir)
+            '.',
+            Path(os.path.relpath(tmp_src_dir, src_dir)).as_posix()
         ])
         
         # Make sure rsync worked
