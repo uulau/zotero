@@ -10,6 +10,9 @@ import fileinput
 from collections import OrderedDict
 import json
 import traceback
+import fnmatch
+
+from pathlib import Path
 
 # Hack to combine two argparse formatters
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
@@ -77,12 +80,6 @@ def main():
         log(tmp_dir)
         log(tmp_src_dir)
         log(os.path.relpath(tmp_src_dir, src_dir))
-
-        from pathlib import Path
-
-        import os
-        import shutil
-        import fnmatch
 
         def copy_files(src_dir, dst_dir, exclude=None):
             if exclude is None:
