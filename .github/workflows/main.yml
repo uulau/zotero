@@ -26,9 +26,11 @@ jobs:
           node-version: 18
 
       - name: Set Git autocrlf to false
+        shell: bash
         run: |
           git config --global core.autocrlf false
           git lfs install
+          ls .
 
       - name: Clone Zotero source and prepare
         shell: bash
