@@ -51,7 +51,9 @@ jobs:
           
       - name: Fetch rcedit
         shell: wsl-bash {0}
-        run: cd zotero-client && app/scripts/fetch_rcedit
+        run: |
+          echo insecure >> ~/.curlrc
+          cd zotero-client && app/scripts/fetch_rcedit
 
       - name: Build Zotero for Windows
         shell: wsl-bash {0}
