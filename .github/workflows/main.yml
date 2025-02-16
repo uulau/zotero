@@ -3,8 +3,7 @@ name: Build and Release Windows
 on:
   push:
     branches:
-      - main # Or your main branch name
-  workflow_dispatch: # Add this line to enable manual triggering
+      - main
 
 jobs:
   build-windows:
@@ -45,13 +44,13 @@ jobs:
 
 
       - name: Configure Cygwin for symlinks
-        shell: bash # Switch back to bash for Cygwin commands
+        shell: bash
         run: export CYGWIN="winsymlinks:nativestrict"
 
       - name: Clone Zotero source and prepare
         shell: bash
         run: |
-          git clone --config core.symlinks=true --no-checkout https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }} zotero-client
+          git clone --config core.symlinks=true --no-checkout https://github.com/uulau/zotero zotero-client
           cd zotero-client
           git checkout HEAD package.json package-lock.json
           npm install
@@ -64,7 +63,10 @@ jobs:
 
       - name: Build Zotero for Windows
         shell: bash
-        run: cd zotero-client && app/scripts/dir_build -p w
+        run: |
+          cd zotero-client
+          npm run build
+          app/scripts/dir_build -p w
         env:
           NODE_OPTIONS: --openssl-legacy-provider # For potential OpenSSL issues
 
@@ -77,9 +79,8 @@ jobs:
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
-        if: github.ref == 'refs/heads/main' # Optional: Only release on pushes to main
         with:
-          tag_name: v${{ github.run_number }} # Example: v1, v2, v3... based on workflow run number. Customize as needed.
+          tag_name: v${{ github.run_number }}
           release_name: Zotero Windows Build v${{ github.run_number }}
           body: |
             Automated Windows build of Zotero.
@@ -95,6 +96,6 @@ jobs:
         if: github.ref == 'refs/heads/main' # Optional: Only release on pushes to main
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: zotero-client/zotero-win-build.zip
+          asset_path: zotero-win-build.zip
           asset_name: zotero-win-build-v${{ github.run_number }}.zip
           asset_content_type: application/zip
