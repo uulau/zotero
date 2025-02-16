@@ -80,18 +80,33 @@ def main():
 
         from pathlib import Path
 
-        # Export a clean copy of the source tree
-        subprocess.check_call([
-            'rsync',
-            '-aL',
-            # Exclude hidden files
-            '--exclude', '.*',
-            '--exclude', '#*',
-            '--exclude', 'package.json',
-            '--exclude', 'package-lock.json',
-            '.',
-            Path(os.path.relpath(tmp_src_dir, src_dir)).as_posix()
-        ])
+        import os
+        import shutil
+        import fnmatch
+
+        def copy_files(src_dir, dst_dir, exclude=None):
+            if exclude is None:
+                exclude = {'.*', '#*', 'package.json', 'package-lock.json'}
+        
+            for root, dirs, files in os.walk(src_dir):
+                rel_root = os.path.relpath(root, src_dir)
+                target_root = os.path.join(dst_dir, rel_root) if rel_root != '.' else dst_dir
+        
+                os.makedirs(target_root, exist_ok=True)
+        
+                for file in files:
+                    if any(fnmatch.fnmatch(file, pattern) for pattern in exclude):
+                        continue
+                    shutil.copy2(os.path.join(root, file), os.path.join(target_root, file))
+        
+                for dir_name in list(dirs):
+                    if any(fnmatch.fnmatch(dir_name, pattern) for pattern in exclude):
+                        dirs.remove(dir_name)  # Prevent os.walk from entering excluded dirs
+        
+        src_dir = "."
+        dst_dir = os.path.relpath(tmp_src_dir, src_dir)
+        
+        copy_files(src_dir, dst_dir)
         
         # Make sure rsync worked
         d = os.path.join(tmp_src_dir, 'chrome')
