@@ -81,7 +81,7 @@ def main():
             '--exclude', 'package.json',
             '--exclude', 'package-lock.json',
             '.' + os.sep,
-            tmp_src_dir + os.sep
+            os.path.relpath(tmp_src_dir, src_dir)
         ])
         
         # Make sure rsync worked
