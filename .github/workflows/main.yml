@@ -25,30 +25,8 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install Cygwin and required packages
-        shell: pwsh # Use PowerShell for this step
-        run: |
-          # Ensure C:\temp directory exists
-          if (!(Test-Path -Path "C:\temp" -PathType Container)) {
-              New-Item -ItemType Directory -Path "C:\temp"
-          }
-
-          # Download Cygwin setup-x86_64.exe using PowerShell to a valid Windows path
-          Invoke-WebRequest -Uri https://cygwin.com/setup-x86_64.exe -OutFile "C:\temp\setup-x86_64.exe"
-
-          # Run Cygwin setup in unattended mode, installing necessary packages
-          C:\temp\setup-x86_64.exe -q -P git,p7zip,python3,wget,xz,zip,unzip,dos2unix
-
-          # Add Cygwin bin directory to PATH using Environment File
-          Add-Content -Path "${env:GITHUB_PATH}" -Value "C:\cygwin64\bin"
-
-
-      - name: Configure Cygwin for symlinks
-        shell: bash
-        run: export CYGWIN="winsymlinks:nativestrict"
-
       - name: Clone Zotero source and prepare
-        shell: bash
+        shell: wslbash.exe {0}
         run: |
           git clone --config core.symlinks=true --no-checkout https://github.com/uulau/zotero zotero-client
           cd zotero-client
@@ -56,13 +34,13 @@ jobs:
           npm install
           git checkout -f HEAD
           git submodule update --init --recursive
-
+          
       - name: Fetch rcedit
-        shell: bash
+        shell: wslbash.exe {0}
         run: cd zotero-client && app/scripts/fetch_rcedit
 
       - name: Build Zotero for Windows
-        shell: bash
+        shell: wslbash.exe {0}
         run: |
           cd zotero-client
           npm install -g win-node-env
@@ -72,11 +50,11 @@ jobs:
           NODE_OPTIONS: --openssl-legacy-provider # For potential OpenSSL issues
 
       - name: Zip the built app
-        shell: bash
+        shell: wslbash.exe {0}
         run: |
           cd zotero-client/app/staging
-          $appName="Zotero_win-x64" # Adjust if your build output directory name is different
-          Compress-Archive -Path "$appName" -DestinationPath "../../../zotero-win-build.zip" -CompressionLevel Optimal
+          appName="Zotero_win-x64" # Adjust if your build output directory name is different
+          zip -r ../../../zotero-win-build.zip "$appName"
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
@@ -85,7 +63,6 @@ jobs:
           release_name: Zotero Windows Build v${{ github.run_number }}
           body: |
             Automated Windows build of Zotero.
-
             **Note:** This is an unpackaged build and may require manual setup.
           draft: false
           prerelease: false
