@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main # Or your main branch name
+  workflow_dispatch: # Add this line to enable manual triggering
 
 jobs:
   build-windows:
@@ -26,25 +27,27 @@ jobs:
           node-version: 18
 
       - name: Install Cygwin and required packages
-        shell: bash # Use bash shell for cygwin setup commands
+        shell: pwsh # Use PowerShell for this step
         run: |
-          # Download Cygwin setup-x86_64.exe
-          wget https://cygwin.com/setup-x86_64.exe -P /tmp
+          # Download Cygwin setup-x86_64.exe using PowerShell
+          Invoke-WebRequest -Uri https://cygwin.com/setup-x86_64.exe -OutFile /tmp/setup-x86_64.exe
 
           # Run Cygwin setup in unattended mode, installing necessary packages
           /tmp/setup-x86_64.exe -q -P git,p7zip,python3,wget,xz,zip,unzip,dos2unix
 
           # Add Cygwin bin directory to PATH for subsequent steps
-          echo "C:\cygwin64\bin" >> $GITHUB_PATH
+          $env:PATH = "C:\cygwin64\bin;" + $env:PATH
+          Write-Host "::add-path::C:\cygwin64\bin" # GitHub Actions way to add to path
+
 
       - name: Configure Cygwin for symlinks
-        shell: bash
+        shell: bash # Switch back to bash for Cygwin commands
         run: export CYGWIN="winsymlinks:nativestrict"
 
       - name: Clone Zotero source and prepare
         shell: bash
         run: |
-          git clone --config core.symlinks=true --no-checkout https://github.com/uulau/zotero zotero-client
+          git clone --config core.symlinks=true --no-checkout https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }} zotero-client
           cd zotero-client
           git checkout HEAD package.json package-lock.json
           npm install
