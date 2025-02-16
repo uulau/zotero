@@ -26,7 +26,7 @@ jobs:
           node-version: 18
 
       - name: Clone Zotero source and prepare
-        shell: wslbash.exe {0}
+        shell: C:\Windows\System32\bash.exe {0}
         run: |
           git clone --config core.symlinks=true --no-checkout https://github.com/uulau/zotero zotero-client
           cd zotero-client
@@ -36,11 +36,11 @@ jobs:
           git submodule update --init --recursive
           
       - name: Fetch rcedit
-        shell: wslbash.exe {0}
+        shell: C:\Windows\System32\bash.exe {0}
         run: cd zotero-client && app/scripts/fetch_rcedit
 
       - name: Build Zotero for Windows
-        shell: wslbash.exe {0}
+        shell: C:\Windows\System32\bash.exe {0}
         run: |
           cd zotero-client
           npm install -g win-node-env
@@ -50,7 +50,7 @@ jobs:
           NODE_OPTIONS: --openssl-legacy-provider # For potential OpenSSL issues
 
       - name: Zip the built app
-        shell: wslbash.exe {0}
+        shell: C:\Windows\System32\bash.exe {0}
         run: |
           cd zotero-client/app/staging
           appName="Zotero_win-x64" # Adjust if your build output directory name is different
