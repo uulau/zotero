@@ -22,6 +22,7 @@ jobs:
                 xz-utils
                 zip
                 unzip
+                curl
           
       - name: Checkout code
         uses: actions/checkout@v4
