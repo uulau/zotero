@@ -39,7 +39,8 @@ jobs:
 
       - name: Clone Zotero source and prepare
         shell: wsl-bash {0}
-        run: |
+        run:
+          git config --global http.sslverify false
           git clone --config core.symlinks=true --no-checkout https://github.com/uulau/zotero zotero-client
           cd zotero-client
           git checkout HEAD package.json package-lock.json
